@@ -1,0 +1,34 @@
+Topic: Running LLMs in production — what actually works
+Date: 2024-09-20
+Category: ai-ml
+Speakers: Aiko (ML engineer), Devon (platform engineer)
+
+Aiko: We've been in production with our LLM feature for about three months now. Happy to share what we learned if it helps you plan yours.
+
+Devon: Please. We're about two months out from launch and I want to know what's going to bite us that we're not thinking about.
+
+Aiko: Number one thing: latency is way more variable than you expect. The same prompt can take 800ms one time and 4 seconds the next depending on server load on the provider's side. You need to design your UI to handle that gracefully — skeleton states, streaming, timeouts.
+
+Devon: We're planning to stream the response tokens as they arrive, which should help perceived latency.
+
+Aiko: Streaming helps a lot. But make sure your backend can handle the chunked transfer and that your frontend doesn't break if the stream cuts off mid-response. We had a bug where a dropped connection left the UI in an indefinite loading state.
+
+Devon: Good catch. What about cost? That's one of our bigger concerns.
+
+Aiko: Prompt engineering is your biggest lever. We had prompts that were 2000 tokens because someone kept appending context without pruning. Cutting that to 600 tokens cut our costs by 60% with no quality regression. Audit every prompt.
+
+Devon: Are you caching anything?
+
+Aiko: Yes, and it's been impactful. For requests that hit the same or very similar prompts — like template-based queries — we cache the response with a short TTL. Semantic caching with embeddings is more sophisticated but even exact-match caching on the prompt hash helps.
+
+Devon: We're also worried about the model saying something wrong or harmful. How are you handling output validation?
+
+Aiko: Layered approach. First, structured outputs — if the model is supposed to return JSON, we enforce the schema and retry if it fails. Second, a lightweight classifier that flags responses that look off-topic or inappropriate before they hit the user. Third, rate limiting per user so one bad actor can't spam the model.
+
+Devon: Retrying failed outputs sounds expensive.
+
+Aiko: It is, so you minimize it by being precise in the prompt about the format you want. Include an example output in the prompt. It dramatically reduces malformed responses.
+
+Devon: What would you do differently if you were starting over?
+
+Aiko: I'd instrument everything from day one. Trace every prompt, every response, every latency number, every token count. We added observability retroactively and it was painful. You can't debug production LLM issues without logs.

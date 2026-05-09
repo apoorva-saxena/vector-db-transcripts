@@ -1,0 +1,34 @@
+Topic: Microservices vs monolith — re-evaluating the architecture
+Date: 2024-01-30
+Category: architecture
+Speakers: Ravi (tech lead), Cho (engineering manager)
+
+Ravi: I want to have an honest conversation about our microservices setup. I think we may have over-architected.
+
+Cho: What's making you say that?
+
+Ravi: We have 14 services for a product with 8 engineers. Half our incidents involve something crossing a service boundary — timeouts, version mismatches, cascading failures. A change that would take an hour in a monolith takes a day because you're coordinating deploys across three repos.
+
+Cho: I hear that. We went to microservices because the previous monolith had become a big ball of mud. Nobody wanted to touch it.
+
+Ravi: Right, but the problem wasn't the monolith architecture. The problem was no module boundaries, no discipline. You can have a modular monolith — clean internal packages, enforced interfaces — without the operational overhead of distributed systems.
+
+Cho: So you're not saying ditch service separation entirely, just saying we don't need separate deployments for every domain?
+
+Ravi: Exactly. Keep the logical separation but collapse most services into one deployable. Extract a service only when you have a real reason — different scaling profile, different language, different team owning it end to end.
+
+Cho: The team has invested a lot in the service mesh, the CI pipelines per service, the Kubernetes configs. That's a lot to undo.
+
+Ravi: It doesn't have to be big bang. We pick the two or three services that cause the most cross-boundary friction and merge them first. Measure the result. If it's better, keep going.
+
+Cho: What would you collapse first?
+
+Ravi: The notification service and the email service should never have been separate. They talk to each other on every single request. And the user preferences service — it's three endpoints, it doesn't need its own deployment.
+
+Cho: Those are small enough that merging them is low risk. What about data? They have separate databases.
+
+Ravi: That's the harder part. Shared database is fine when it's the same team and the same deployment. The isolation benefit of separate DBs matters when services are owned by different teams and you can't coordinate schema changes. In our case, same team, so shared schema with clear table ownership is workable.
+
+Cho: I'm open to the experiment. Write up a proposal for merging notifications and email and we'll see what the numbers look like after a month.
+
+Ravi: Will do. I think we'll see incident rate drop and deploy frequency go up just from reducing the coordination cost.

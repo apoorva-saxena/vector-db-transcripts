@@ -1,0 +1,32 @@
+Topic: React vs Vue for a new frontend project
+Date: 2024-03-12
+Category: frontend
+Speakers: Priya (frontend lead), Marcus (senior engineer)
+
+Priya: We're about to kick off the new dashboard and I want to settle the framework question early. My instinct is React, but I know you've been doing a lot with Vue lately.
+
+Marcus: Yeah, I've been heads down in Vue 3 for the past six months. Honestly the Composition API changed my opinion of it a lot. It used to feel like it had too much magic, but now it's much closer to how React hooks work.
+
+Priya: That's interesting. I felt the opposite — hooks took me a while to really internalize. The mental model of closures capturing stale state tripped me up early on.
+
+Marcus: The stale closure problem is real. Vue sidesteps it because reactivity is based on proxies, not closures. When you access a reactive value inside a computed or a watcher, it tracks the dependency automatically. You don't think about it.
+
+Priya: But doesn't that automatic tracking make it harder to reason about what's actually re-rendering and why?
+
+Marcus: Fair point. There's a tradeoff. With React you're explicit — you list dependencies in the deps array — so it's easier to audit. With Vue you're implicit, which means less boilerplate but occasionally surprising behavior if a reactive value is accessed conditionally.
+
+Priya: The ecosystem is my bigger concern honestly. React just has more. More component libraries, more hiring pool, more Stack Overflow answers.
+
+Marcus: That's true and I won't pretend otherwise. For a team that's going to grow, React is the safer bet on hiring alone. But if it's a small stable team, Vue's developer experience is genuinely nicer day to day. Less ceremony.
+
+Priya: What about TypeScript support? We're going full TS on this project.
+
+Marcus: Both are solid now. Vue 3 was basically rewritten in TypeScript so the types are tight. React with TypeScript is mature and well-documented, though prop types and generics can get verbose with complex components.
+
+Priya: I'm leaning toward React just because our backend team already knows it from a previous project and can pitch in on the frontend occasionally. Shared knowledge matters.
+
+Marcus: That's a completely valid reason. Framework choice is often more about team context than technical merit. If the team knows React, React wins.
+
+Priya: We'll go with React then. But let's steal some ideas from Vue — I like the single-file component structure as a convention even if we don't use it literally.
+
+Marcus: Agreed. You can get pretty close with a folder-per-component pattern. Component file, styles file, test file, all colocated.

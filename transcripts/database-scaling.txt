@@ -1,0 +1,36 @@
+Topic: Database scaling strategies for a growing SaaS product
+Date: 2023-11-05
+Category: databases
+Speakers: Yusuf (backend engineer), Sandra (staff engineer)
+
+Yusuf: We're starting to see query times creep up on the orders table. It's at about 40 million rows now and some of the reporting queries are taking 3-4 seconds.
+
+Sandra: First question — are you on indexes? What does the query plan look like?
+
+Yusuf: Yeah we have indexes on user_id and created_at separately, but the slow queries filter on both.
+
+Sandra: There's your problem. A composite index on (user_id, created_at) will be dramatically faster for those queries. Column order matters — put the equality filter first, then the range filter.
+
+Yusuf: I can add that. But even beyond the current bottleneck, I'm worried about where we are in a year. We're growing about 15% month over month.
+
+Sandra: At that growth rate you'll hit a few natural thresholds. First is read replicas — offload your reporting queries to a replica so they don't compete with write traffic on the primary. That alone buys you a lot of headroom.
+
+Yusuf: We're on RDS, so read replicas are pretty straightforward to spin up. I was also thinking about partitioning the orders table by date.
+
+Sandra: Partitioning makes sense eventually, but don't reach for it too early. It adds operational complexity and the query planner has to route correctly or you lose the benefit. I'd exhaust indexes and replicas first.
+
+Yusuf: What about sharding? I've seen some architectures that shard by tenant ID.
+
+Sandra: Sharding is a last resort. It solves write scalability but it breaks joins, makes migrations painful, and limits your query flexibility. Most SaaS products never actually need it. A well-tuned Postgres instance can handle hundreds of millions of rows.
+
+Yusuf: So the priority would be: composite index now, read replica soon, partitioning if we need it later, sharding almost never?
+
+Sandra: Exactly. Also look at your connection pooling situation. A lot of "database is slow" problems are actually connection exhaustion. Are you running PgBouncer or equivalent?
+
+Yusuf: We're not. Connections are handled by the ORM connection pool.
+
+Sandra: ORM pools are fine for low concurrency but they don't multiplex well. PgBouncer in transaction mode can cut your connection count by an order of magnitude under load.
+
+Yusuf: I'll add that to the list. So today: composite index and investigate connection pooling.
+
+Sandra: That'll probably solve your immediate 3-4 second query problem entirely. Profile before you add more complexity.
